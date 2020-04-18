@@ -3,7 +3,7 @@
 
 - retrieve URLs for articles from pocket
 - PDFs are downloaded directly
-- webpages are converted to a [readable format](github.com/go-shiori/go-readability) and converted to epub
+- webpages are converted to a [readable format](https://github.com/go-shiori/go-readability) and converted to epub
 - folder with PDFs and epubs can be synced using the reMarkable desktop application
 
 ## Getting started
