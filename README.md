@@ -1,5 +1,5 @@
 # pocket2rm
-pocket2rm is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) to the [remarkable paper tablet](https://remarkable.com/).
+`pocket2rm` is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) to the [remarkable paper tablet](https://remarkable.com/).
 
 - retrieve URLs for articles from pocket
 - PDFs are downloaded directly
