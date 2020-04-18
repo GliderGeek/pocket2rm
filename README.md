@@ -21,3 +21,7 @@
 
 ## Non-goals
 - support other read-later services / e-reader targets
+
+## Alternatives:
+- there is [google-chrome plugin](https://chrome.google.com/webstore/detail/send-to-remarkable/mcfkooagiaelmfpkgegmbobdcpcbdbgh) which sends articles to reMarkable
+- reMarkable is planning to release an [offical chrome plugin](https://support.remarkable.com/hc/en-us/articles/360006830977-Read-on-reMarkable-Google-Chrome-plug-in)
