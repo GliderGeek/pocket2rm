@@ -237,6 +237,11 @@ func main() {
 		if extension == ".pdf" {
 			fileName := getFilename(pocketItem.added, pocketItem.title, "pdf")
 			filePath := filepath.Join(articleFolder, fileName)
+
+			if _, err := os.Stat(filePath); err == nil {
+				continue //file already exists
+			}
+
 			err := writePDF(filePath, pocketItem.url.String())
 			if err != nil {
 				fmt.Println("Could not get PDF for ", pocketItem.url.String(), err)
@@ -244,13 +249,18 @@ func main() {
 
 		} else {
 			fileName := getFilename(pocketItem.added, pocketItem.title, "epub")
+			filePath := filepath.Join(articleFolder, fileName)
+
+			if _, err := os.Stat(filePath); err == nil {
+				continue //file already exists
+			}
+
 			title, content, err := getReadableArticle(pocketItem.url)
 			if err != nil {
 				fmt.Println("Could not get readable article for ", pocketItem.url.String(), err)
 				continue
 			}
 
-			filePath := filepath.Join(articleFolder, fileName)
 			err = writeEpub(filePath, title, content)
 			if err != nil {
 				fmt.Println("Could not write epub for ", pocketItem.url.String())

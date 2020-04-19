@@ -17,7 +17,6 @@
 ## Improvements
 - extend with automatic push to reMarkable using [this library](https://github.com/juruen/rmapi)
 - process articles concurrently for higher throughput
-- check which articles are already retrieved
 
 ## Non-goals
 - support other read-later services / e-reader targets
