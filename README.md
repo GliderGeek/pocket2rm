@@ -15,9 +15,8 @@
 - run `go run pocket2rm.go`
 
 ## Improvements
-- extend with automatic push to reMarkable using [this library](https://github.com/juruen/rmapi)
+- enable running programm on remarkable
 - process articles concurrently for higher throughput
-- use GUI instead of commandline
 
 ## Non-goals
 - support other read-later services / e-reader targets
