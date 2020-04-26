@@ -11,7 +11,7 @@
 - run `go run pocket2rm setup`:
   - interactive prompt asks for `consumerKey`
   - pocket user is redirected to pocket page to accept application
-  - after confirmation in prompt, the `consumerKey` and `accessToken` are written to `.pocket2mr`
+  - if application is accepted: `consumerKey` and `accessToken` are written to `.pocket2mr`
 - run `go run pocket2rm.go`
 
 ## Improvements
