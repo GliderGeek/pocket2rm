@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"os/exec"
@@ -71,24 +72,44 @@ func input(text string) string {
 func setup(credentialsPath string) error {
 
 	consumerKey := input("Insert consumerKey: ")
-	redirectURL := "https://raw.githubusercontent.com/GliderGeek/pocket2rm/master/pocket_redirect.html"
 
-	requestToken, err := auth.ObtainRequestToken(consumerKey, redirectURL)
+	// setup local listener server for a confirmation
+	ch := make(chan struct{})
+	ts := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+			if req.URL.Path != "/" {
+				http.Error(w, "Not Found", 404)
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/plain")
+			fmt.Fprintln(w, "Choice registered.")
+			ch <- struct{}{}
+		}))
+
+	defer ts.Close()
+
+	requestToken, err := auth.ObtainRequestToken(consumerKey, ts.URL)
 	if err != nil {
 		fmt.Println("Could not obtain request token: ", err)
 		return err
 	}
 
 	//Open authorization URL in default browser for user to confirm application
-	authorizationURL := auth.GenerateAuthorizationURL(requestToken, redirectURL)
+	authorizationURL := auth.GenerateAuthorizationURL(requestToken, ts.URL)
+
 	open(authorizationURL)
 
-	input("Press enter when authorized in browser")
+	<-ch //block untill request comes in
 
 	authorization, err := auth.ObtainAccessToken(consumerKey, requestToken)
 	if err != nil {
 		fmt.Println("Could not obtain accessToken: ", err)
+		return err
 	}
+
+	fmt.Println("Authorized.")
 
 	credentials := make(map[string]string)
 	credentials["consumerKey"] = consumerKey
