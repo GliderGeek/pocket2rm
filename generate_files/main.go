@@ -212,9 +212,10 @@ func main() {
 // - ./pocket2rm
 // - remove sync file
 
+// TODOs
 // move pocketFolder UUID to config
-// run as service
 // enable epub
-// local file mimic for debugging
+// local file mimic for debugging?
 // - golang command for local folder
-// get actual pocket articles
+// get actual pocket articles (limit amount?)
+// run as service
