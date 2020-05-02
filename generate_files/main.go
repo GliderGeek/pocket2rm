@@ -236,6 +236,7 @@ func main() {
 
 // TODOs
 // debug issue with reloadFile. seems to not work after power cycle
+// - reload file is there, but still workflow is started
 // - is uuid changed?
 // get actual pocket articles
 // - limit amount
