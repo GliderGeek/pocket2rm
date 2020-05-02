@@ -132,14 +132,34 @@ func generateReloadFile() {
 	writeReloadUUID(reloadFileUUID)
 }
 
+// uuid is returned
+func generateEpub(visibleName string, fileContent []byte) string {
+
+	var lastModified uint = 1 //TODO number too big. maybe need custom marshal: http://choly.ca/post/go-json-marshalling/
+
+	config := getConfig()
+	fileUUID := uuid.New().String()
+
+	fileName := filepath.Join(articeFolderPath(), fileUUID+".epub")
+	writeFile(fileName, fileContent)
+
+	fileContent = getDotContentContent("epub")
+	fileName = filepath.Join(articeFolderPath(), fileUUID+".content")
+	writeFile(fileName, fileContent)
+
+	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, lastModified)
+	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
+	writeFile(fileName, fileContent)
+
+	return fileUUID
+}
+
 func generatePDF(visibleName string, fileContent []byte) string {
 
 	var lastModified uint = 1 //TODO number too big. maybe need custom marshal: http://choly.ca/post/go-json-marshalling/
 
 	config := getConfig()
-
 	fileUUID := uuid.New().String()
-	fmt.Println(fileUUID)
 
 	fileName := filepath.Join(articeFolderPath(), fileUUID+".pdf")
 	writeFile(fileName, fileContent)
@@ -166,8 +186,13 @@ func generateFiles() {
 	fmt.Println("generating files")
 	fileNameInput := "sample.pdf"
 	fileContent, _ := ioutil.ReadFile(fileNameInput)
-	visibleName := "sample " + uuid.New().String()[0:4]
+	visibleName := "sample pdf " + uuid.New().String()[0:4]
 	generatePDF(visibleName, fileContent)
+
+	fileNameInput = "sample.epub"
+	fileContent, _ = ioutil.ReadFile(fileNameInput)
+	visibleName = "sample epub " + uuid.New().String()[0:4]
+	generateEpub(visibleName, fileContent)
 }
 
 func stopXochitl() {
@@ -202,7 +227,7 @@ func main() {
 //current flow:
 // - enable ssh
 // - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID", "pocketFolderUUID"
-// - inside generate_file: `GOOS=linux GOARCH=arm GOARM=5 go build -o pocket2rm.arm`
+// - inside generate_files folder: `GOOS=linux GOARCH=arm GOARM=5 go build -o pocket2rm.arm`
 // - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
 // - scp pocket2rm.arm root@10.11.99.1:/home/root/.
 // - ssh@10.11.99.1
@@ -210,9 +235,14 @@ func main() {
 // - remove sync file
 
 // TODOs
-// move pocketFolder UUID to config
-// enable epub
+// debug issue with reloadFile. seems to not work after power cycle
+// - is uuid changed?
+// get actual pocket articles
+// - limit amount
+// - keep track of what has been processed (URLs in config?)
 // local file mimic for debugging?
 // - golang command for local folder
-// get actual pocket articles (limit amount?)
 // run as service
+
+// to find folder UUID:
+//grep \"visibleName\":\ \"Pocket\" *.metadata -l -i
