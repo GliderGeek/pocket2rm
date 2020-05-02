@@ -16,6 +16,7 @@
 
 # articles are written to this folder 
 articles
+pocket2rm.arm
 
 #MAC OS
 .DS_Store

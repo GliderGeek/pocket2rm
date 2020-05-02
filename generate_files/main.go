@@ -4,18 +4,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 )
 
 //ExtraMetaData silence lint
 type ExtraMetaData struct {
 }
 
+//Config silence lint
+type Config struct {
+	ConsumerKey string `yaml:"consumerKey"`
+	AccessToken string `yaml:"accessToken"`
+	ReloadUUID  string `yaml:"reloadUUID"`
+}
+
 //MetaData silence lint
 type MetaData struct {
 	Deleted          bool   `json:"deleted"`
-	LastModified     int    `json:"lastModified"` //maybe uint? see golang example of json marshal
+	LastModified     uint   `json:"lastModified"`
 	Metadatamodified bool   `json:"metadatamodified"`
 	Modified         bool   `json:"modified"`
 	Parent           string `json:"parent"` //uuid
@@ -53,6 +65,17 @@ type DocumentContent struct {
 	Transform      Transform     `json:"transform"`
 }
 
+func articeFolderPath() string {
+	return "/home/root/.local/share/remarkable/xochitl/"
+}
+
+func pocketFolderUUID() string {
+	return "75d25724-2cde-4872-8bf8-24e289b52476"
+}
+
+func getConfigPath() string {
+	return "/home/root/.pocket2rm"
+}
 func writeFile(fileName string, fileContent []byte) {
 
 	// write the whole body at once
@@ -69,30 +92,129 @@ func getDotContentContent(fileType string) []byte {
 	return content
 }
 
-func getMetadataContent(visibleName string, parentUUID string, lastModified int) []byte {
-
+func getMetadataContent(visibleName string, parentUUID string, lastModified uint) []byte {
 	metadataContent := MetaData{false, lastModified, false, false, parentUUID, false, false, "DocumentType", 1, visibleName}
 	content, _ := json.Marshal(metadataContent)
 	return content
 }
 
-func main() {
+//check both if file is present and if metadata deleted=false
+func pdfIsPresent(uuid string) bool {
 
-	parentUUID := "75d25724-2cde-4872-8bf8-24e289b52476"
-	lastModified := 1588012868000
-	fileNameInput := "sample.pdf"
-	visibleName := "sample"
+	pdfPath := filepath.Join(articeFolderPath(), uuid+".pdf")
+	metadaPath := filepath.Join(articeFolderPath(), uuid+".metadata")
+	_, err := os.Stat(pdfPath)
 
-	fmt.Println("hello there")
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	fileContent, _ := ioutil.ReadFile(metadaPath)
+	var metadata MetaData
+	json.Unmarshal(fileContent, &metadata)
+	return !metadata.Deleted
+}
+
+func reloadFileExists() bool {
+	config := getConfig()
+	return pdfIsPresent(config.ReloadUUID)
+}
+
+func writeReloadUUID(newReloadUUID string) {
+	configPath := getConfigPath()
+	config := getConfig()
+	config.ReloadUUID = newReloadUUID
+	ymlContent, _ := yaml.Marshal(config)
+	_ = ioutil.WriteFile(configPath, ymlContent, os.ModePerm)
+}
+
+func generateReloadFile() {
+	fmt.Println("writing reloadfile")
+	fileContent, _ := ioutil.ReadFile("sample.pdf")
+	reloadFileUUID := generatePDF("remove to sync", fileContent)
+	writeReloadUUID(reloadFileUUID)
+}
+
+func generatePDF(visibleName string, fileContent []byte) string {
+
+	var lastModified uint = 1 //TODO number too big. maybe need custom marshal: http://choly.ca/post/go-json-marshalling/
+
 	fileUUID := uuid.New().String()
 	fmt.Println(fileUUID)
 
-	fileContent, _ := ioutil.ReadFile(fileNameInput)
-	writeFile(fileUUID+".pdf", fileContent)
+	fileName := filepath.Join(articeFolderPath(), fileUUID+".pdf")
+	writeFile(fileName, fileContent)
 
 	fileContent = getDotContentContent("pdf")
-	writeFile(fileUUID+".content", fileContent)
+	fileName = filepath.Join(articeFolderPath(), fileUUID+".content")
+	writeFile(fileName, fileContent)
 
-	fileContent = getMetadataContent(visibleName, parentUUID, lastModified)
-	writeFile(fileUUID+".metadata", fileContent)
+	fileContent = getMetadataContent(visibleName, pocketFolderUUID(), lastModified)
+	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
+	writeFile(fileName, fileContent)
+
+	return fileUUID
 }
+
+func getConfig() Config {
+	fileContent, _ := ioutil.ReadFile(getConfigPath())
+	var config Config
+	yaml.Unmarshal(fileContent, &config)
+	return config
+}
+
+func generateFiles() {
+	fmt.Println("generating files")
+	fileNameInput := "sample.pdf"
+	fileContent, _ := ioutil.ReadFile(fileNameInput)
+	visibleName := "sample " + uuid.New().String()[0:4]
+	generatePDF(visibleName, fileContent)
+}
+
+func stopXochitl() {
+	cmd := exec.Command("systemctl", "stop", "xochitl")
+	cmd.Run()
+}
+
+func restartXochitl() {
+	cmd := exec.Command("systemctl", "restart", "xochitl")
+	cmd.Run()
+}
+
+func main() {
+	fmt.Println("start programm")
+	time.Sleep(3 * time.Second)
+
+	for {
+		fmt.Println("sleep for 5 secs")
+		time.Sleep(5 * time.Second)
+		if reloadFileExists() {
+			fmt.Println("reload file exists")
+		} else {
+			fmt.Println("no reload file")
+			stopXochitl()
+			generateFiles()
+			generateReloadFile()
+			restartXochitl()
+		}
+	}
+}
+
+//current flow:
+// - enable ssh
+// - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID"
+// - make pocket folder on remarkable
+// - change pocketFolderUUID string inside go code
+// - inside generate_file: `GOOS=linux GOARCH=arm GOARM=5 go build -o pocket2rm.arm`
+// - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
+// - scp pocket2rm.arm root@10.11.99.1:/home/root/.
+// - ssh@10.11.99.1
+// - ./pocket2rm
+// - remove sync file
+
+// move pocketFolder UUID to config
+// run as service
+// enable epub
+// local file mimic for debugging
+// - golang command for local folder
+// get actual pocket articles
