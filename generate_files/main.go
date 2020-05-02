@@ -19,9 +19,10 @@ type ExtraMetaData struct {
 
 //Config silence lint
 type Config struct {
-	ConsumerKey string `yaml:"consumerKey"`
-	AccessToken string `yaml:"accessToken"`
-	ReloadUUID  string `yaml:"reloadUUID"`
+	ConsumerKey      string `yaml:"consumerKey"`
+	AccessToken      string `yaml:"accessToken"`
+	ReloadUUID       string `yaml:"reloadUUID"`
+	PocketFolderUUID string `yaml:"pocketFolderUUID"`
 }
 
 //MetaData silence lint
@@ -67,10 +68,6 @@ type DocumentContent struct {
 
 func articeFolderPath() string {
 	return "/home/root/.local/share/remarkable/xochitl/"
-}
-
-func pocketFolderUUID() string {
-	return "75d25724-2cde-4872-8bf8-24e289b52476"
 }
 
 func getConfigPath() string {
@@ -139,6 +136,8 @@ func generatePDF(visibleName string, fileContent []byte) string {
 
 	var lastModified uint = 1 //TODO number too big. maybe need custom marshal: http://choly.ca/post/go-json-marshalling/
 
+	config := getConfig()
+
 	fileUUID := uuid.New().String()
 	fmt.Println(fileUUID)
 
@@ -149,7 +148,7 @@ func generatePDF(visibleName string, fileContent []byte) string {
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".content")
 	writeFile(fileName, fileContent)
 
-	fileContent = getMetadataContent(visibleName, pocketFolderUUID(), lastModified)
+	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, lastModified)
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
 	writeFile(fileName, fileContent)
 
@@ -202,9 +201,7 @@ func main() {
 
 //current flow:
 // - enable ssh
-// - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID"
-// - make pocket folder on remarkable
-// - change pocketFolderUUID string inside go code
+// - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID", "pocketFolderUUID"
 // - inside generate_file: `GOOS=linux GOARCH=arm GOARM=5 go build -o pocket2rm.arm`
 // - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
 // - scp pocket2rm.arm root@10.11.99.1:/home/root/.
