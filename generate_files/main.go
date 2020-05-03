@@ -1,14 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/bmaupin/go-epub"
+	"github.com/go-shiori/go-readability"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
@@ -19,10 +26,11 @@ type ExtraMetaData struct {
 
 //Config silence lint
 type Config struct {
-	ConsumerKey      string `yaml:"consumerKey"`
-	AccessToken      string `yaml:"accessToken"`
-	ReloadUUID       string `yaml:"reloadUUID"`
-	PocketFolderUUID string `yaml:"pocketFolderUUID"`
+	ConsumerKey      string   `yaml:"consumerKey"`
+	AccessToken      string   `yaml:"accessToken"`
+	ReloadUUID       string   `yaml:"reloadUUID"`
+	PocketFolderUUID string   `yaml:"pocketFolderUUID"`
+	HandledArticles  []string `yaml:"handledArticles"` //id of article //TODO: should be converted to set for better time complexity
 }
 
 //MetaData silence lint
@@ -37,6 +45,13 @@ type MetaData struct {
 	Type             string `json:"type"`
 	Version          int    `json:"version"`
 	VisibleName      string `json:"visibleName"`
+}
+
+type pocketItem struct {
+	id    string
+	url   *url.URL
+	added time.Time
+	title string
 }
 
 //Transform silence lint
@@ -64,6 +79,56 @@ type DocumentContent struct {
 	PageCount      int           `json:"pageCount"`
 	TextScale      int           `json:"textScale"`
 	Transform      Transform     `json:"transform"`
+}
+
+// PocketResult silence lint
+type PocketResult struct {
+	List     map[string]Item
+	Status   int
+	Complete int
+	Since    int
+}
+
+// Item silence lint
+type Item struct {
+	ItemID        string `json:"item_id"`
+	ResolvedID    string `json:"resolved_id"`
+	GivenURL      string `json:"given_url"`
+	ResolvedURL   string `json:"resolved_url"`
+	GivenTitle    string `json:"given_title"`
+	ResolvedTitle string `json:"resolved_title"`
+	IsArticle     int    `json:"is_article,string"`
+	TimeAdded     Time   `json:"time_added"`
+}
+
+// PocketAuth silence lint
+type PocketAuth struct {
+	ConsumerKey string `json:"consumer_key"`
+	AccessToken string `json:"access_token"`
+}
+
+// Time silence lint
+type Time time.Time
+
+//UnmarshalJSON silence lint
+func (t *Time) UnmarshalJSON(b []byte) error {
+	i, err := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	*t = Time(time.Unix(i, 0))
+
+	return nil
+}
+
+// Title returns ResolvedTitle or GivenTitle
+func (item Item) Title() string {
+	title := item.ResolvedTitle
+	if title == "" {
+		title = item.GivenTitle
+	}
+	return title
 }
 
 func articeFolderPath() string {
@@ -117,10 +182,8 @@ func reloadFileExists() bool {
 	return pdfIsPresent(config.ReloadUUID)
 }
 
-func writeReloadUUID(newReloadUUID string) {
+func writeConfig(config Config) {
 	configPath := getConfigPath()
-	config := getConfig()
-	config.ReloadUUID = newReloadUUID
 	ymlContent, _ := yaml.Marshal(config)
 	_ = ioutil.WriteFile(configPath, ymlContent, os.ModePerm)
 }
@@ -129,7 +192,9 @@ func generateReloadFile() {
 	fmt.Println("writing reloadfile")
 	fileContent, _ := ioutil.ReadFile("sample.pdf")
 	reloadFileUUID := generatePDF("remove to sync", fileContent)
-	writeReloadUUID(reloadFileUUID)
+	config := getConfig()
+	config.ReloadUUID = reloadFileUUID
+	writeConfig(config)
 }
 
 // uuid is returned
@@ -152,6 +217,26 @@ func generateEpub(visibleName string, fileContent []byte) string {
 	writeFile(fileName, fileContent)
 
 	return fileUUID
+}
+
+func createPDFFileContent(url string) []byte {
+	resp, _ := http.Get(url)
+	defer resp.Body.Close()
+	content, _ := ioutil.ReadAll(resp.Body)
+	return content
+}
+
+func createEpubFileContent(title string, content string) []byte {
+	e := epub.NewEpub(title)
+	e.SetAuthor("pocket2rm")
+	_, _ = e.AddSection(content, title, "", "")
+
+	tmpName := "/tmp/epub" + uuid.New().String()[0:5] + ".epub"
+	_ = e.Write(tmpName)
+	defer os.Remove(tmpName)
+
+	fileContent, _ := ioutil.ReadFile(tmpName)
+	return fileContent
 }
 
 func generatePDF(visibleName string, fileContent []byte) string {
@@ -182,17 +267,116 @@ func getConfig() Config {
 	return config
 }
 
-func generateFiles() {
-	fmt.Println("generating files")
-	fileNameInput := "sample.pdf"
-	fileContent, _ := ioutil.ReadFile(fileNameInput)
-	visibleName := "sample pdf " + uuid.New().String()[0:4]
-	generatePDF(visibleName, fileContent)
+func getPocketItems() ([]pocketItem, error) {
+	// unfortunately cannot use github.com/motemen/go-pocket
+	// because of 32bit architecture
+	// Item.ItemID in github.com/motemen/go-pocket is int, which cannot store enough
+	// therefore the necessary types and functions have been copied and adapted
 
-	fileNameInput = "sample.epub"
-	fileContent, _ = ioutil.ReadFile(fileNameInput)
-	visibleName = "sample epub " + uuid.New().String()[0:4]
-	generateEpub(visibleName, fileContent)
+	config := getConfig()
+
+	retrieveResult := &PocketResult{}
+	body, _ := json.Marshal(PocketAuth{config.ConsumerKey, config.AccessToken})
+
+	req, _ := http.NewRequest("POST", "https://getpocket.com/v3/get", bytes.NewReader(body))
+	req.Header.Add("X-Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return []pocketItem{}, err
+	}
+
+	if resp.StatusCode != 200 {
+		return []pocketItem{}, fmt.Errorf("got response %d; X-Error=[%s]", resp.StatusCode, resp.Header.Get("X-Error"))
+	}
+
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(retrieveResult)
+	if err != nil {
+		return []pocketItem{}, err
+	}
+
+	var items []pocketItem
+	for id, item := range retrieveResult.List {
+		parsedURL, _ := url.Parse(item.ResolvedURL)
+		items = append(items, pocketItem{id, parsedURL, time.Time(item.TimeAdded), item.Title()})
+	}
+
+	return items, nil
+}
+
+//generate filename from time added and title
+func getFilename(timeAdded time.Time, title string) string {
+	// fileType: "epub" or "pdf"
+	title = strings.Join(strings.Fields(title), "-")
+	title = strings.Replace(title, "/", "_", -1)
+	fileName := fmt.Sprintf("%s_%s", timeAdded.Format("20060102"), title)
+	return fileName
+}
+
+func alreadyHandled(article pocketItem) bool {
+	config := getConfig()
+	for _, articleID := range config.HandledArticles {
+		if article.id == articleID {
+			return true
+		}
+	}
+	return false
+}
+
+func registerHandled(article pocketItem) {
+	config := getConfig()
+	config.HandledArticles = append(config.HandledArticles, article.id)
+	writeConfig(config)
+}
+
+func getReadableArticle(url *url.URL) (string, string, error) {
+	timeout, _ := time.ParseDuration("10s")
+	article, err := readability.FromURL(url.String(), timeout)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return article.Title, article.Content, nil
+}
+
+func generateFiles(maxArticles uint) error {
+	fmt.Println("inside generateFiles")
+	pocketArticles, err := getPocketItems()
+	if err != nil {
+		fmt.Println("Could not get pocket articles: ", err)
+		return err
+	}
+
+	var processed uint = 0
+	for _, pocketItem := range pocketArticles {
+		if alreadyHandled(pocketItem) {
+			fmt.Println("already handled")
+			continue
+		}
+
+		fileName := getFilename(pocketItem.added, pocketItem.title)
+		extension := filepath.Ext(pocketItem.url.String())
+		if extension == ".pdf" {
+			fileContent := createPDFFileContent(pocketItem.url.String())
+			generatePDF(fileName, fileContent)
+		} else {
+			title, XMLcontent, _ := getReadableArticle(pocketItem.url)
+			fileContent := createEpubFileContent(title, XMLcontent)
+			generateEpub(fileName, fileContent)
+		}
+
+		registerHandled(pocketItem)
+		processed++
+		fmt.Println(fmt.Sprintf("progress: %d/%d", processed, maxArticles))
+		if processed == maxArticles {
+			break
+		}
+	}
+
+	return nil
 }
 
 func stopXochitl() {
@@ -207,17 +391,16 @@ func restartXochitl() {
 
 func main() {
 	fmt.Println("start programm")
-	time.Sleep(3 * time.Second)
-
+	var maxFiles uint = 10
 	for {
-		fmt.Println("sleep for 5 secs")
-		time.Sleep(5 * time.Second)
+		fmt.Println("sleep for 10 secs")
+		time.Sleep(10 * time.Second)
 		if reloadFileExists() {
 			fmt.Println("reload file exists")
 		} else {
 			fmt.Println("no reload file")
 			stopXochitl()
-			generateFiles()
+			generateFiles(maxFiles)
 			generateReloadFile()
 			restartXochitl()
 		}
@@ -225,25 +408,30 @@ func main() {
 }
 
 //current flow:
+// Setup
 // - enable ssh
 // - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID", "pocketFolderUUID"
-// - inside generate_files folder: `GOOS=linux GOARCH=arm GOARM=5 go build -o pocket2rm.arm`
+// - inside generate_files folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
 // - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
 // - scp pocket2rm.arm root@10.11.99.1:/home/root/.
+
+//Run
 // - ssh@10.11.99.1
 // - ./pocket2rm
 // - remove sync file
 
 // TODOs
-// debug issue with reloadFile. seems to not work after power cycle
+// debug issue with reloadFile. sometimes double file? after power cycle?
 // - reload file is there, but still workflow is started
-// - is uuid changed?
-// get actual pocket articles
-// - limit amount
-// - keep track of what has been processed (URLs in config?)
-// local file mimic for debugging?
+// - is uuid changed? seems not
+// implement error handling
+// remove to sync file different content. in memory, not separate file
+// logging instead of printing. enabled/disabled with flag?
+// local file system for debugging?
 // - golang command for local folder
 // run as service
+// why is renews compiling with GOARM=5?
+// do not treat archived articles?
 
 // to find folder UUID:
 //grep \"visibleName\":\ \"Pocket\" *.metadata -l -i
