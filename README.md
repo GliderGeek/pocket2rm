@@ -1,22 +1,25 @@
 # pocket2rm
-`pocket2rm` is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) to the [reMarkable paper tablet](https://remarkable.com/).
+`pocket2rm` is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) on the [reMarkable paper tablet](https://remarkable.com/). 
 
-- retrieve URLs for articles from pocket
-- PDFs are downloaded directly
-- webpages are converted to a [readable format](https://github.com/go-shiori/go-readability) and converted to epub
-- folder with PDFs and epubs can be synced using the reMarkable desktop application
+- retrieve URLs for articles from pocket (last 10)
+- PDFs are downloaded directly, webpages are converted to a [readable format](https://github.com/go-shiori/go-readability) and converted to epub
+- runs on reMarkable directly, does not use reMarkable cloud.
+- sync is user-triggered (removing synchronization file)
 
 ## Getting started
+- setup SSH connection with remarkable
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
-- run `go run pocket2rm setup`:
-  - interactive prompt asks for `consumerKey`
-  - pocket user is redirected to pocket page to accept application
-  - if application is accepted: `consumerKey` and `accessToken` are written to `.pocket2mr`
-- run `go run pocket2rm.go`
+- Create ~/.pocket2rm with "consumerKey", "accessToken"
+- Inside service folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
+- scp ~/.pocket2rm root@10.11.99.1:/home/root/.
+- scp pocket2rm.arm root@10.11.99.1:/home/root/.
+
+- ssh@10.11.99.1 to get on reMarkable
+- ./pocket2rm
+- remove sync file
 
 ## Improvements
-- enable running programm on remarkable
-- process articles concurrently for higher throughput
+- run as service
 
 ## Non-goals
 - support other read-later services / e-reader targets
@@ -24,3 +27,10 @@
 ## Alternatives:
 - there is [google-chrome plugin](https://chrome.google.com/webstore/detail/send-to-remarkable/mcfkooagiaelmfpkgegmbobdcpcbdbgh) which sends articles to reMarkable
 - reMarkable is planning to release an [offical chrome plugin](https://support.remarkable.com/hc/en-us/articles/360006830977-Read-on-reMarkable-Google-Chrome-plug-in)
+
+## Credit
+There were a few projects, apart from the dependencies, which were very helpful:
+- https://github.com/Evidlo/remarkable_news
+- https://github.com/koreader/koreader
+- https://github.com/nick8325/remarkable-fs
+- https://github.com/jessfraz/morningpaper2remarkable

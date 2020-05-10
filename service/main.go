@@ -487,25 +487,10 @@ func main() {
 	}
 }
 
-//current flow:
-// Setup
-// - enable ssh
-// - make ~/.pocket2rm with "consumerKey", "accessToken"
-// - inside service folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
-// - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
-// - scp pocket2rm.arm root@10.11.99.1:/home/root/.
-
-//Run
-// - ssh@10.11.99.1
-// - ./pocket2rm
-// - remove sync file
-
 // TODOs
 // run as service
 // - what is needed to hook into logging?
-// debug issue with reloadFile. sometimes double file? after power cycle?
-// - reload file is there, but still workflow is started
-// - is uuid changed? seems not
+// - separate service for polling reload file?
 // implement error handling
 // - wrong/missing pocketCredentials
 // - no internet
