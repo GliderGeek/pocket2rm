@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -54,6 +55,13 @@ type pocketItem struct {
 	added time.Time
 	title string
 }
+
+//ByAdded silence lint
+type ByAdded []pocketItem
+
+func (a ByAdded) Len() int           { return len(a) }
+func (a ByAdded) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAdded) Less(i, j int) bool { return a[i].added.Before(a[j].added) }
 
 //Transform silence lint
 type Transform struct {
@@ -102,8 +110,8 @@ type Item struct {
 	TimeAdded     Time   `json:"time_added"`
 }
 
-// PocketAuth silence lint
-type PocketAuth struct {
+// PocketRetrieve silence lint
+type PocketRetrieve struct {
 	ConsumerKey string `json:"consumer_key"`
 	AccessToken string `json:"access_token"`
 }
@@ -139,6 +147,7 @@ func articeFolderPath() string {
 func getConfigPath() string {
 	return "/home/root/.pocket2rm"
 }
+
 func writeFile(fileName string, fileContent []byte) {
 
 	// write the whole body at once
@@ -289,7 +298,7 @@ func getPocketItems() ([]pocketItem, error) {
 	config := getConfig()
 
 	retrieveResult := &PocketResult{}
-	body, _ := json.Marshal(PocketAuth{config.ConsumerKey, config.AccessToken})
+	body, _ := json.Marshal(PocketRetrieve{config.ConsumerKey, config.AccessToken})
 
 	req, _ := http.NewRequest("POST", "https://getpocket.com/v3/get", bytes.NewReader(body))
 	req.Header.Add("X-Accept", "application/json")
@@ -316,6 +325,8 @@ func getPocketItems() ([]pocketItem, error) {
 		items = append(items, pocketItem{id, parsedURL, time.Time(item.TimeAdded), item.Title()})
 	}
 
+	// sort by latest added article first
+	sort.Sort(sort.Reverse(ByAdded(items)))
 	return items, nil
 }
 
@@ -438,10 +449,6 @@ func main() {
 // - remove sync file
 
 // TODOs
-
-// remove to sync file different content. in memory, not separate file
-// clean up structure for two programs: one for setup, one on reMarkable
-
 // debug issue with reloadFile. sometimes double file? after power cycle?
 // - reload file is there, but still workflow is started
 // - is uuid changed? seems not
@@ -452,9 +459,8 @@ func main() {
 // local file system for debugging?
 // - golang command for local folder
 // run as service
-// why is renews compiling with GOARM=5?
-// do not treat archived articles?
 // images in files are not coming through
+// title on top of file?
 
 // to find folder UUID:
 //grep \"visibleName\":\ \"Pocket\" *.metadata -l -i
