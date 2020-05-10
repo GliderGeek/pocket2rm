@@ -164,8 +164,8 @@ func getDotContentContent(fileType string) []byte {
 	return content
 }
 
-func getMetadataContent(visibleName string, parentUUID string, lastModified uint) []byte {
-	metadataContent := MetaData{false, lastModified, false, false, parentUUID, false, false, "DocumentType", 1, visibleName}
+func getMetadataContent(visibleName string, parentUUID string, fileType string, lastModified uint) []byte {
+	metadataContent := MetaData{false, lastModified, false, false, parentUUID, false, false, fileType, 1, visibleName}
 	content, _ := json.Marshal(metadataContent)
 	return content
 }
@@ -182,6 +182,21 @@ func pdfIsPresent(uuid string) bool {
 	}
 
 	fileContent, _ := ioutil.ReadFile(metadaPath)
+	var metadata MetaData
+	json.Unmarshal(fileContent, &metadata)
+	return !metadata.Deleted
+}
+
+func folderIsPresent(uuid string) bool {
+	folderPath := filepath.Join(articeFolderPath(), uuid+".content")
+	metadataPath := filepath.Join(articeFolderPath(), uuid+".metadata")
+	_, err := os.Stat(folderPath)
+
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	fileContent, _ := ioutil.ReadFile(metadataPath)
 	var metadata MetaData
 	json.Unmarshal(fileContent, &metadata)
 	return !metadata.Deleted
@@ -234,7 +249,7 @@ func generateEpub(visibleName string, fileContent []byte) string {
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".content")
 	writeFile(fileName, fileContent)
 
-	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, lastModified)
+	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, "DocumentType", lastModified)
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
 	writeFile(fileName, fileContent)
 
@@ -275,7 +290,7 @@ func generatePDF(visibleName string, fileContent []byte) string {
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".content")
 	writeFile(fileName, fileContent)
 
-	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, lastModified)
+	fileContent = getMetadataContent(visibleName, config.PocketFolderUUID, "DocumentType", lastModified)
 	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
 	writeFile(fileName, fileContent)
 
@@ -423,6 +438,33 @@ func restartXochitl() {
 	cmd.Run()
 }
 
+func pocketFolderExists() bool {
+	config := getConfig()
+	folderUUID := config.PocketFolderUUID
+	return folderIsPresent(folderUUID)
+}
+
+func generateTopLevelFolder(folderName string) string {
+	var lastModified uint = 1 //TODO number too big. maybe need custom marshal: http://choly.ca/post/go-json-marshalling/
+	fileUUID := uuid.New().String()
+
+	fileName := filepath.Join(articeFolderPath(), fileUUID+".content")
+	writeFile(fileName, []byte("{}"))
+
+	fileContent := getMetadataContent(folderName, "", "CollectionType", lastModified)
+	fileName = filepath.Join(articeFolderPath(), fileUUID+".metadata")
+	writeFile(fileName, fileContent)
+
+	return fileUUID
+}
+
+func generatePocketFolder() {
+	pocketFolderUUID := generateTopLevelFolder("pocket")
+	config := getConfig()
+	config.PocketFolderUUID = pocketFolderUUID
+	writeConfig(config)
+}
+
 func main() {
 	fmt.Println("start programm")
 	var maxFiles uint = 10
@@ -434,6 +476,10 @@ func main() {
 		} else {
 			fmt.Println("no reload file")
 			stopXochitl()
+			if !pocketFolderExists() {
+				fmt.Println("no pocket folder")
+				generatePocketFolder()
+			}
 			generateFiles(maxFiles)
 			generateReloadFile()
 			restartXochitl()
