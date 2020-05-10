@@ -363,7 +363,12 @@ func getReadableArticle(url *url.URL) (string, string, error) {
 		return "", "", err
 	}
 
-	return article.Title, article.Content, nil
+	// Include title and source URL in beginning of content
+	content := fmt.Sprintf(`<h1> %s </h1>
+		<a href="%s">%s</a>
+		%s`, article.Title, url.String(), url.String(), article.Content)
+
+	return article.Title, content, nil
 }
 
 func generateFiles(maxArticles uint) error {
