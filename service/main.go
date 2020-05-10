@@ -390,6 +390,7 @@ func generateFiles(maxArticles uint) error {
 			title, XMLcontent, err := getReadableArticle(pocketItem.url)
 			if err != nil {
 				fmt.Println("Could not get readable article")
+				registerHandled(pocketItem)
 				continue
 			}
 			fileContent := createEpubFileContent(title, XMLcontent)
