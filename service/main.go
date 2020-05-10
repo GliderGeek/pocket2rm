@@ -490,8 +490,8 @@ func main() {
 //current flow:
 // Setup
 // - enable ssh
-// - make ~/.pocket2rm with "consumerKey", "accessToken", "reloadUUID", "pocketFolderUUID"
-// - inside generate_files folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
+// - make ~/.pocket2rm with "consumerKey", "accessToken"
+// - inside service folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
 // - scp ~/.pocket2rm root@10.11.99.1:/home/root/.
 // - scp pocket2rm.arm root@10.11.99.1:/home/root/.
 
@@ -501,6 +501,8 @@ func main() {
 // - remove sync file
 
 // TODOs
+// run as service
+// - what is needed to hook into logging?
 // debug issue with reloadFile. sometimes double file? after power cycle?
 // - reload file is there, but still workflow is started
 // - is uuid changed? seems not
@@ -508,11 +510,7 @@ func main() {
 // - wrong/missing pocketCredentials
 // - no internet
 // logging instead of printing. enabled/disabled with flag?
+// images in files are not coming through
+// -> external URLs. to support this, the xml should be parsed and files should be downloaded.
 // local file system for debugging?
 // - golang command for local folder
-// run as service
-// images in files are not coming through
-// title on top of file?
-
-// to find folder UUID:
-//grep \"visibleName\":\ \"Pocket\" *.metadata -l -i
