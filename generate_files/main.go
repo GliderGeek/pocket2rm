@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	pdf "github.com/balacode/one-file-pdf"
 	"github.com/bmaupin/go-epub"
 	"github.com/go-shiori/go-readability"
 	"github.com/google/uuid"
@@ -190,7 +191,19 @@ func writeConfig(config Config) {
 
 func generateReloadFile() {
 	fmt.Println("writing reloadfile")
-	fileContent, _ := ioutil.ReadFile("sample.pdf")
+	var pdf = pdf.NewPDF("A4")
+
+	pdf.SetUnits("cm").
+		SetFont("Helvetica-Bold", 100).
+		SetColor("Black")
+	pdf.SetXY(3.5, 5).
+		DrawText("Remove")
+	pdf.SetXY(9, 10).
+		DrawText("to")
+	pdf.SetXY(6.5, 15).
+		DrawText("Sync")
+	fileContent := pdf.Bytes()
+
 	reloadFileUUID := generatePDF("remove to sync", fileContent)
 	config := getConfig()
 	config.ReloadUUID = reloadFileUUID
@@ -363,7 +376,11 @@ func generateFiles(maxArticles uint) error {
 			fileContent := createPDFFileContent(pocketItem.url.String())
 			generatePDF(fileName, fileContent)
 		} else {
-			title, XMLcontent, _ := getReadableArticle(pocketItem.url)
+			title, XMLcontent, err := getReadableArticle(pocketItem.url)
+			if err != nil {
+				fmt.Println("Could not get readable article")
+				continue
+			}
 			fileContent := createEpubFileContent(title, XMLcontent)
 			generateEpub(fileName, fileContent)
 		}
@@ -421,17 +438,23 @@ func main() {
 // - remove sync file
 
 // TODOs
+
+// remove to sync file different content. in memory, not separate file
+// clean up structure for two programs: one for setup, one on reMarkable
+
 // debug issue with reloadFile. sometimes double file? after power cycle?
 // - reload file is there, but still workflow is started
 // - is uuid changed? seems not
 // implement error handling
-// remove to sync file different content. in memory, not separate file
+// - wrong/missing pocketCredentials
+// - no internet
 // logging instead of printing. enabled/disabled with flag?
 // local file system for debugging?
 // - golang command for local folder
 // run as service
 // why is renews compiling with GOARM=5?
 // do not treat archived articles?
+// images in files are not coming through
 
 // to find folder UUID:
 //grep \"visibleName\":\ \"Pocket\" *.metadata -l -i
