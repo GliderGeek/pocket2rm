@@ -1,0 +1,14 @@
+[Unit]
+Description=pocket2rm
+After=home.mount
+After=xochitl.service
+Conflicts=xochitl.service
+OnFailure=xochitl.service
+
+[Service]
+ExecStart=/home/root/pocket2rm.arm
+ExecStopPost=/bin/false
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

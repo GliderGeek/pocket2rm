@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -428,16 +427,6 @@ func generateFiles(maxArticles uint) error {
 	return nil
 }
 
-func stopXochitl() {
-	cmd := exec.Command("systemctl", "stop", "xochitl")
-	cmd.Run()
-}
-
-func restartXochitl() {
-	cmd := exec.Command("systemctl", "restart", "xochitl")
-	cmd.Run()
-}
-
 func pocketFolderExists() bool {
 	config := getConfig()
 	folderUUID := config.PocketFolderUUID
@@ -464,38 +453,3 @@ func generatePocketFolder() {
 	config.PocketFolderUUID = pocketFolderUUID
 	writeConfig(config)
 }
-
-func main() {
-	fmt.Println("start programm")
-	var maxFiles uint = 10
-	for {
-		fmt.Println("sleep for 10 secs")
-		time.Sleep(10 * time.Second)
-		if reloadFileExists() {
-			fmt.Println("reload file exists")
-		} else {
-			fmt.Println("no reload file")
-			stopXochitl()
-			if !pocketFolderExists() {
-				fmt.Println("no pocket folder")
-				generatePocketFolder()
-			}
-			generateFiles(maxFiles)
-			generateReloadFile()
-			restartXochitl()
-		}
-	}
-}
-
-// TODOs
-// run as service
-// - what is needed to hook into logging?
-// - separate service for polling reload file?
-// implement error handling
-// - wrong/missing pocketCredentials
-// - no internet
-// logging instead of printing. enabled/disabled with flag?
-// images in files are not coming through
-// -> external URLs. to support this, the xml should be parsed and files should be downloaded.
-// local file system for debugging?
-// - golang command for local folder

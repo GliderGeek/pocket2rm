@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.arm
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,7 +17,6 @@
 
 # articles are written to this folder 
 articles
-pocket2rm.arm
 
 #MAC OS
 .DS_Store

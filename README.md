@@ -10,12 +10,15 @@
 - setup SSH connection with remarkable
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
 - Create ~/.pocket2rm with "consumerKey", "accessToken"
-- Inside service folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
-- scp ~/.pocket2rm root@10.11.99.1:/home/root/.
-- scp pocket2rm.arm root@10.11.99.1:/home/root/.
+- Inside cmd/pocket2rm folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
+- Inside cmd/pocket2rm-reload folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm`
+- scp cmd/pocket2rm/pocket2rm.arm root@10.11.99.1:/home/root/.
+- scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.
+- scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@10.11.99.1:/home/root/.
+- scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.
+
 
 - ssh@10.11.99.1 to get on reMarkable
-- ./pocket2rm
 - remove sync file
 
 ## Improvements
