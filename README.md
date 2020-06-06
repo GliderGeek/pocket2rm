@@ -8,7 +8,7 @@
 
 ## Prerequisites
 - SSH connection with remarkable: [https://remarkablewiki.com/tech/ssh](https://remarkablewiki.com/tech/ssh)
-- golang (+dependencies?)
+- golang + dependencies
 - scp
 
 ## Installation
@@ -33,7 +33,7 @@
 - move scp commands to pocket2rm-setup
 - provide binaries
 - images in epubs
-- improve repo structure (duplicate utils)
+- improve repo structure (duplicate utils, dependencies)
 
 ## Non-goals
 - support other read-later services / e-reader targets
