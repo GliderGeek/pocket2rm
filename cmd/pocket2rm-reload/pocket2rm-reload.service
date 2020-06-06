@@ -1,0 +1,10 @@
+[Unit]
+Description=pocket2rm reload listener
+After=home.mount
+
+[Service]
+ExecStart=/home/root/pocket2rm-reload.arm
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
