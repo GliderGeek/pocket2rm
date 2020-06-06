@@ -6,23 +6,34 @@
 - runs on reMarkable directly, does not use reMarkable cloud.
 - sync is user-triggered (removing synchronization file)
 
-## Getting started
-- setup SSH connection with remarkable
+## Prerequisites
+- SSH connection with remarkable: [https://remarkablewiki.com/tech/ssh](https://remarkablewiki.com/tech/ssh)
+- golang (+dependencies?)
+- scp
+
+## Installation
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
-- Create ~/.pocket2rm with "consumerKey", "accessToken"
+
+- Inside cmd/pocket2rm-setup folder: `go build main.go`
 - Inside cmd/pocket2rm folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
 - Inside cmd/pocket2rm-reload folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm`
-- scp cmd/pocket2rm/pocket2rm.arm root@10.11.99.1:/home/root/.
-- scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.
-- scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@10.11.99.1:/home/root/.
-- scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.
 
+- execute `cmd/pocket2rm-setup/main`
 
-- ssh@10.11.99.1 to get on reMarkable
-- remove sync file
+- `scp $HOME/.pocket2rm root@10.11.99.1:/home/root/.`
+- `scp cmd/pocket2rm/pocket2rm.arm root@10.11.99.1:/home/root/.`
+- `scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.`
+- `scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@10.11.99.1:/home/root/.`
+- `scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.`
+
+- `ssh root@10.11.99.1 systemctl start pocket2rm-reload`
 
 ## Improvements
-- run as service
+- input consumerKey in popup (removes commandline run)
+- move scp commands to pocket2rm-setup
+- provide binaries
+- images in epubs
+- improve repo structure (duplicate utils)
 
 ## Non-goals
 - support other read-later services / e-reader targets

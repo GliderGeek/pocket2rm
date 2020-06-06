@@ -87,20 +87,6 @@ func setup(credentialsPath string) error {
 	return nil
 }
 
-func getCredentials(credentialsPath string) (string, string, error) {
-	//return consumerKey, accessToken, error
-
-	fileContent, err := ioutil.ReadFile(credentialsPath)
-	if err != nil {
-		return "", "", err
-	}
-
-	var credentials map[string]string
-	yaml.Unmarshal(fileContent, &credentials)
-
-	return credentials["consumerKey"], credentials["accessToken"], nil
-}
-
 // open opens the specified URL in the default browser of the user.
 func open(url string) error {
 	var cmd string
@@ -120,7 +106,6 @@ func open(url string) error {
 }
 
 func main() {
-
 	user, err := user.Current()
 	if err != nil {
 		fmt.Println("Could not get user")
@@ -128,12 +113,5 @@ func main() {
 	}
 
 	credentialsPath := filepath.Join(user.HomeDir, ".pocket2rm")
-
-	argsWithProg := os.Args
-	if len(argsWithProg) > 1 {
-		if argsWithProg[1] == "setup" {
-			setup(credentialsPath)
-		}
-		os.Exit(0)
-	}
+	setup(credentialsPath)
 }
