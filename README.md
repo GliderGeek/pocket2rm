@@ -1,3 +1,5 @@
+# ! Warning: i am experiencing some problems with my reMarkable which is restarting at randoming times. Looking into this
+
 # pocket2rm
 `pocket2rm` is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) on the [reMarkable paper tablet](https://remarkable.com/). 
 
