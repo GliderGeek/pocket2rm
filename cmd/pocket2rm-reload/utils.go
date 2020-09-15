@@ -40,7 +40,7 @@ type MetaData struct {
 	LastModified     uint   `json:"lastModified"`
 	Metadatamodified bool   `json:"metadatamodified"`
 	Modified         bool   `json:"modified"`
-	Parent           string `json:"parent"` //uuid
+	Parent           string `json:"parent"` //uuid or "trash"
 	Pinned           bool   `json:"pinned"`
 	Synced           bool   `json:"synced"`
 	Type             string `json:"type"`
@@ -169,7 +169,7 @@ func getMetadataContent(visibleName string, parentUUID string, fileType string, 
 	return content
 }
 
-//check both if file is present and if metadata deleted=false
+//check both if file is present and (metadata deleted=false or file in trash)
 func pdfIsPresent(uuid string) bool {
 
 	pdfPath := filepath.Join(articeFolderPath(), uuid+".pdf")
@@ -183,7 +183,7 @@ func pdfIsPresent(uuid string) bool {
 	fileContent, _ := ioutil.ReadFile(metadaPath)
 	var metadata MetaData
 	json.Unmarshal(fileContent, &metadata)
-	return !metadata.Deleted
+	return !metadata.Deleted && metadata.Parent != "trash"
 }
 
 func folderIsPresent(uuid string) bool {
