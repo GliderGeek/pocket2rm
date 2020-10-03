@@ -30,6 +30,13 @@
 
 - `ssh root@10.11.99.1 systemctl start pocket2rm-reload`
 
+## Remarkable software updates
+After a remarakble software update, some of the steps need to be redone:
+- `scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.`
+- `scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.`
+- `ssh root@10.11.99.1 systemctl start pocket2rm-reload`
+
+
 ## Improvements
 - input consumerKey in popup (removes commandline run)
 - move scp commands to pocket2rm-setup
