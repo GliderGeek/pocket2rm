@@ -16,9 +16,9 @@
 ## Installation
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
 
-- Inside cmd/pocket2rm-setup folder: `go build main.go`
-- Inside cmd/pocket2rm folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
-- Inside cmd/pocket2rm-reload folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm`
+- Inside cmd/pocket2rm-setup folder: `go get; go build main.go`
+- Inside cmd/pocket2rm folder: `go get; GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
+- Inside cmd/pocket2rm-reload folder: `go get; GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm`
 
 - execute `cmd/pocket2rm-setup/main`
 
