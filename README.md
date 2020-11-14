@@ -1,5 +1,3 @@
-### Update 15/09/2020: The code has been updated to work with the new software version of reMarkable which uses a trash instead of immediate deletion.
-
 # pocket2rm
 `pocket2rm` is a tool to get articles from read-later platform [pocket](https://app.getpocket.com/) on the [reMarkable paper tablet](https://remarkable.com/). 
 
