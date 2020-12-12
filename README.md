@@ -8,8 +8,9 @@
 
 ## Prerequisites
 - SSH connection with remarkable: [https://remarkablewiki.com/tech/ssh](https://remarkablewiki.com/tech/ssh)
-- golang + dependencies
+- golang
 - scp
+- browser (necessary for OAuth2)
 
 ## Installation
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
