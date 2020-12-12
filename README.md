@@ -30,7 +30,7 @@ After a reMarkable software update, you will need to rerun the install script:
 
 ## Reinstall
 
-If for soem reason you need/want to reinstall completly pocket2rm:
+If for some reason you need/want to reinstall pocket2rm completely :
 
 - remove the file $HOME/.pocket2rm
 - remove the folder called `pocket` on your remarkable
