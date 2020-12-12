@@ -22,7 +22,7 @@
 ```
 
 ## Remarkable software updates
-After a remarakble software update, you will need to rerun the install script:
+After a reMarkable software update, you will need to rerun the install script:
 
 ```
 ./install.sh
