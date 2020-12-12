@@ -13,7 +13,7 @@ check_go() {
   mkdir -p "$GOBIN"
 }
 
-compile_pocket2rm() {
+compile_bin_files() {
   cd "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup"
   go get
   go build main.go
@@ -39,10 +39,13 @@ copy_bin_files_to_remarkable() {
   scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@"$REMARKABLE_IP":/home/root/.
 }
 
-copy_systemd_files_to_remarkable() {
+copy_service_files_to_remarkable() {
   cd "$INSTALL_SCRIPT_DIR"
   scp cmd/pocket2rm/pocket2rm.service root@"$REMARKABLE_IP":/etc/systemd/system/.
   scp cmd/pocket2rm-reload/pocket2rm-reload.service root@"$REMARKABLE_IP":/etc/systemd/system/.
+}
+
+register_and_run_service_on_remarkable() {
   ssh root@"$REMARKABLE_IP" systemctl enable pocket2rm-reload
   ssh root@"$REMARKABLE_IP" systemctl start pocket2rm-reload
 }
@@ -52,17 +55,19 @@ REMARKABLE_IP=""
 
 main() {
   INSTALL_SCRIPT_DIR=$(pwd)
-  check_go
 
   printf "\n\n"
-  read  -r -p "Enter your Remarkable IP address: " REMARKABLE_IP
+  read  -r -p "Enter your Remarkable IP address [10.11.99.1]: " REMARKABLE_IP
+  REMARKABLE_IP=${REMARKABLE_IP:-10.11.99.1}
   
   if [ ! -f "$HOME/.pocket2rm" ]; then
-    compile_pocket2rm
-    copy_file_to_remarkable
+    check_go
+    compile_bin_files
+    copy_bin_files_to_remarkable
   fi
 
-  copy_systemd_files_to_remarkable
+  copy_service_files_to_remarkable
+  register_and_run_service_on_remarkable
 
   printf "\n\npocket2rm successfully installed on your Remarkable\n\n"
 }
