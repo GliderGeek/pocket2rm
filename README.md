@@ -8,37 +8,41 @@
 
 ## Prerequisites
 - SSH connection with remarkable: [https://remarkablewiki.com/tech/ssh](https://remarkablewiki.com/tech/ssh)
-- golang + dependencies
+- golang
 - scp
+- browser (necessary for OAuth2)
 
 ## Installation
 - create a pocket application: [https://getpocket.com/developer/apps/new](https://getpocket.com/developer/apps/new) to obtain a `consumerKey`. The application only needs the 'Retrieve' permission.
 
-- Inside cmd/pocket2rm-setup folder: `go build main.go`
-- Inside cmd/pocket2rm folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm`
-- Inside cmd/pocket2rm-reload folder: `GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm`
+- clone or download this repository
+- run:
 
-- execute `cmd/pocket2rm-setup/main`
-
-- `scp $HOME/.pocket2rm root@10.11.99.1:/home/root/.`
-- `scp cmd/pocket2rm/pocket2rm.arm root@10.11.99.1:/home/root/.`
-- `scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.`
-- `scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@10.11.99.1:/home/root/.`
-- `scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.`
-- `ssh root@10.11.99.1 systemctl enable pocket2rm-reload`
-- `ssh root@10.11.99.1 systemctl start pocket2rm-reload`
+```
+./install.sh
+```
 
 ## Remarkable software updates
-After a remarakble software update, some of the steps need to be redone:
-- `scp cmd/pocket2rm/pocket2rm.service root@10.11.99.1:/etc/systemd/system/.`
-- `scp cmd/pocket2rm-reload/pocket2rm-reload.service root@10.11.99.1:/etc/systemd/system/.`
-- `ssh root@10.11.99.1 systemctl enable pocket2rm-reload`
-- `ssh root@10.11.99.1 systemctl start pocket2rm-reload`
+After a reMarkable software update, you will need to rerun the install script:
 
+```
+./install.sh
+```
+
+## Reinstall
+
+If for some reason you need/want to reinstall pocket2rm completely :
+
+- remove the file $HOME/.pocket2rm
+- remove the folder called `pocket` on your remarkable
+- run:
+
+```
+./install.sh
+```
 
 ## Improvements
 - input consumerKey in popup (removes commandline run)
-- move scp commands to pocket2rm-setup
 - provide binaries
 - images in epubs
 - improve repo structure (duplicate utils, dependencies)
