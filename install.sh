@@ -14,6 +14,9 @@ check_go() {
 }
 
 compile_bin_files() {
+
+  printf "\ncompiling pocket2rm...\n\n"
+
   cd "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup"
   go get
   go build main.go
@@ -26,10 +29,10 @@ compile_bin_files() {
   go get
   GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm
 
+  printf "\npocket2rm successfully compiled\n\n"
+
   printf "\n\n"
   "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup/main"
-
-  printf "\npocket2rm successfully compiled\n\n"
 }
 
 copy_bin_files_to_remarkable() {
