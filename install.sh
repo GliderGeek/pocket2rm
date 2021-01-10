@@ -24,7 +24,7 @@ compile_bin_files() {
 
   cd "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-reload"
   go get
-  GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm
+  GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm
 
   printf "\n\n"
   "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup/main"
