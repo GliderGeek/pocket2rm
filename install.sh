@@ -15,7 +15,7 @@ check_go() {
 
 compile_bin_files() {
 
-  printf "\ncompiling pocket2rm...\n\n"
+  printf "\ncompiling pocket2rm...\n"
 
   cd "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup"
   go get
@@ -29,15 +29,18 @@ compile_bin_files() {
   go get
   GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm
 
-  printf "\npocket2rm successfully compiled\n\n"
+  printf "pocket2rm successfully compiled"
 
   printf "\n\n"
   "$INSTALL_SCRIPT_DIR/cmd/pocket2rm-setup/main"
+  printf "\n"
 }
 
 copy_bin_files_to_remarkable() {
   cd "$INSTALL_SCRIPT_DIR"
   scp "$HOME/.pocket2rm" root@"$REMARKABLE_IP":/home/root/.
+  ssh root@"$REMARKABLE_IP" systemctl stop pocket2rm 2> /dev/null;
+  ssh root@"$REMARKABLE_IP" systemctl stop pocket2rm-reload 2> /dev/null;
   scp cmd/pocket2rm/pocket2rm.arm root@"$REMARKABLE_IP":/home/root/.
   scp cmd/pocket2rm-reload/pocket2rm-reload.arm root@"$REMARKABLE_IP":/home/root/.
 }
@@ -59,7 +62,7 @@ REMARKABLE_IP=""
 main() {
   INSTALL_SCRIPT_DIR=$(pwd)
 
-  printf "\n\n"
+  printf "\n"
   read  -r -p "Enter your Remarkable IP address [10.11.99.1]: " REMARKABLE_IP
   REMARKABLE_IP=${REMARKABLE_IP:-10.11.99.1}
   
@@ -72,7 +75,7 @@ main() {
   copy_service_files_to_remarkable
   register_and_run_service_on_remarkable
 
-  printf "\n\npocket2rm successfully installed on your Remarkable\n\n"
+  printf "\npocket2rm successfully installed on your Remarkable\n"
 }
 
 main
