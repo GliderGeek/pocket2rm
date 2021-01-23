@@ -9,7 +9,7 @@
 ## Prerequisites
 - SSH connection with remarkable: [https://remarkablewiki.com/tech/ssh](https://remarkablewiki.com/tech/ssh)
 - golang: https://golang.org/
-- scp: [https://scp.com](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- scp
 - browser (necessary for OAuth2)
 
 ## Installation
