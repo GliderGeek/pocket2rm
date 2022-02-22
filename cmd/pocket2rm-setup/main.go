@@ -58,6 +58,7 @@ func setup(credentialsPath string) error {
 	authorizationURL := auth.GenerateAuthorizationURL(requestToken, ts.URL)
 
 	open(authorizationURL)
+	fmt.Println("Open Authorization URL: ", authorizationURL)
 
 	<-ch //block until request comes in
 
