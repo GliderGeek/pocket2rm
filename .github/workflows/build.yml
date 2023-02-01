@@ -18,3 +18,8 @@ jobs:
       run: |
         cd cmd/pocket2rm
         GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm.arm
+        path: cmd/pocket2rm/pocket2rm.arm
