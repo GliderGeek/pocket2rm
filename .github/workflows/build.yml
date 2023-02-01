@@ -9,7 +9,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Go
       uses: actions/setup-go@v3
       with:
@@ -18,8 +18,17 @@ jobs:
       run: |
         cd cmd/pocket2rm
         GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm
-    - name: Archive production artifacts
+    - name: Persist build
       uses: actions/upload-artifact@v3
       with:
         name: pocket2rm.arm
         path: cmd/pocket2rm/pocket2rm.arm
+    - name: build pocket2rm-reload
+      run: |
+        cd cmd/pocket2rm-reload
+        GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-reload.arm
+        path: cmd/pocket2rm/pocket2rm-reload.arm
