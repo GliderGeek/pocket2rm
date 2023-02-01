@@ -32,3 +32,30 @@ jobs:
       with:
         name: pocket2rm-reload.arm
         path: cmd/pocket2rm-reload/pocket2rm-reload.arm
+    - name: build pocket2rm-setup mac
+      run: |
+        cd cmd/pocket2rm-setup
+        GOOS=darwin go build -o pocket2rm-setup-mac
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-setup-mac
+        path: cmd/pocket2rm-setup/pocket2rm-setup-mac
+    - name: build pocket2rm-setup windows
+      run: |
+        cd cmd/pocket2rm-setup
+        GOOS=windows go build -o pocket2rm-setup-windows
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-setup-windows
+        path: cmd/pocket2rm-setup/pocket2rm-setup-windows
+    - name: build pocket2rm-setup linux
+      run: |
+        cd cmd/pocket2rm-setup
+        GOOS=linux go build -o pocket2rm-setup-linux
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-setup-linux
+        path: cmd/pocket2rm-setup/pocket2rm-setup-linux
