@@ -31,4 +31,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: pocket2rm-reload.arm
-        path: cmd/pocket2rm/pocket2rm-reload.arm
+        path: cmd/pocket2rm-reload/pocket2rm-reload.arm
