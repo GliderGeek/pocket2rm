@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push
+
+jobs:
+
+  build-remarkable:
+    name: Build executables for reMarkable
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: build pocket2rm
+      run: |
+        cd cmd/pocket2rm
+        GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm.arm
+        path: cmd/pocket2rm/pocket2rm.arm
+    - name: build pocket2rm-reload
+      run: |
+        cd cmd/pocket2rm-reload
+        GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm-reload.arm
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-reload.arm
+        path: cmd/pocket2rm-reload/pocket2rm-reload.arm
+
+  build-setup:
+    name: Build executables for setup and local use
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - GOOS: darwin
+            PLATFORM_NAME: mac
+          - GOOS: windows
+            PLATFORM_NAME: windows
+          - GOOS: linux
+            PLATFORM_NAME: linux
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: Compile for ${{matrix.PLATFORM_NAME}}
+      run: |
+        cd cmd/pocket2rm-setup
+        go build -o pocket2rm-setup-${{matrix.PLATFORM_NAME}}
+    - name: Persist build
+      uses: actions/upload-artifact@v3
+      with:
+        name: pocket2rm-setup-${{matrix.PLATFORM_NAME}}
+        path: cmd/pocket2rm-setup/pocket2rm-setup-${{matrix.PLATFORM_NAME}}
