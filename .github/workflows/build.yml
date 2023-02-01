@@ -1,0 +1,20 @@
+name: Build
+
+on:
+  push
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+    - name: build pocket2rm
+      run: |
+        cd cdm/pocket2rm
+        GOOS=linux GOARCH=arm GOARM=7 go build -o pocket2rm.arm
